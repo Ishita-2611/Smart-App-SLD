@@ -5,12 +5,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
 } from 'react-native';
 import { Text, Card, Avatar, Button } from 'react-native-paper';
 import { useTheme } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import api from '../config/api';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RootStackParamList = {
   Home: undefined;
@@ -39,7 +39,6 @@ interface UserProfile {
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -48,20 +47,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const fetchProfile = async () => {
     try {
-      setLoading(true);
-      const response = await api.get('/profiles/');
-      if (response.data && response.data.length > 0) {
-        setProfile(response.data[0]);
-      }
-    } catch (error: any) {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get('http://localhost:8000/api/profiles/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProfile(response.data[0]);
+    } catch (error) {
       console.error('Error fetching profile:', error);
-      Alert.alert(
-        'Error',
-        'Failed to load profile. Please try again later.',
-        [{ text: 'OK' }]
-      );
-    } finally {
-      setLoading(false);
     }
   };
 
